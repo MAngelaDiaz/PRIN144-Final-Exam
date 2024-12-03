@@ -1,6 +1,6 @@
 const express = require('express');
 const { Pool } = require('pg');
-require('dotenv').config();  // Load environment variables
+require('dotenv').config(); 
 
 const app = express();
 app.use(express.json());
@@ -9,7 +9,7 @@ app.use(express.json());
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false  // Required for Neon
+        rejectUnauthorized: false  
     }
 });
 
