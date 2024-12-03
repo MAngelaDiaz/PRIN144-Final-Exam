@@ -25,7 +25,7 @@ app.listen(process.env.PORT || PORT, () => {
     console.log(`Server is listening on port ${PORT}`)
 })
 
-const cars = [{ id: 1, plateNumber: 'ABC 123', bodyType: 'Sedan', Color: 'White', firstName: 'Lovelie', lastName: 'Claravall', }];
+const cars = [{ id: 1, plateNumber: 'QWE 143', bodyType: 'Sedan', Color: 'White', firstName: 'Angela', lastName: 'Hipolito', }];
 let carsID = cars.length;
 
 // app.get('/cars', async (req, res) => {
