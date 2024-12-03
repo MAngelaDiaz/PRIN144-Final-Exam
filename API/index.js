@@ -7,10 +7,10 @@ app.use(express.json());
 // PostgreSQL connection pool
 const pool = new Pool({
     user: 'Angela Diaz',
-    host: 'localhost',  // Use 'localhost' without port in host
-    database: 'vercel',
+    host: 'localhost',   // Corrected to remove the port from host
+    database: 'vercel',  // Add your database name here
     password: 'diaz1234',
-    port: 4000,  // Port number specified here
+    port: 5432,          // Default PostgreSQL port (change if different)
 });
 
 // Index page route
