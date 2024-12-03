@@ -13,7 +13,8 @@
       }
     ],
     "env": {
-      "DATABASE_URL": "postgresql://Angela_Diaz:diaz1234@localhost:4000/vercel"
+    "DATABASE_URL": "postgresql://angela_diaz:diaz1234@your-neon-db-host:5432/car_management_db"
+
     }
   }
   
