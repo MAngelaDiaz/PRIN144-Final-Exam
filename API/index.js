@@ -1,98 +1,123 @@
-const express = require('express');
-const { Pool } = require('pg');
-require('dotenv').config(); 
-
+require('dotenv').config();
+const { sql } = require('@vercel/postgres');
+const express = require('express')
 const app = express();
-app.use(express.json());
 
-// PostgreSQL connection pool using Neon credentials from .env file
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false  
-    }
-});
+// const fs = require('fs')
+// const swaggerUi = require('swagger-ui-express');
+// const YAML = require('yaml')
 
-// Index page route
-app.get('/', (req, res) => {
-    res.send('PRIN144-Final-Exam: Angela Diaz');
-});
+// const file  =  fs.readFileSync(process.cwd() + '/swagger.yaml', 'utf8')
+// const swaggerDocument = YAML.parse(file)
+// const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger-ui.min.css"
 
-// Get All Cars
-app.get('/api/cars', async (req, res) => {
-    try {
-        const result = await pool.query('SELECT * FROM cars');
-        res.status(200).json(result.rows);
-    } catch (err) {
-        res.status(500).json({ error: 'Server Error', details: err.message });
-    }
-});
+// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+//  customCss:
+//      '.swagger-ui .opblock .opblock-summary-path-description-wrapper { align-items: center; display: flex; flex-wrap: wrap; gap: 0 10px; padding: 0 10px; width: 100%; }',
+//  customCssUrl: CSS_URL,
+// }));
 
-// Get a Specific Car by ID
-app.get('/api/cars/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        const result = await pool.query('SELECT * FROM cars WHERE id = $1', [id]);
-        if (result.rows.length > 0) {
-            res.status(200).json(result.rows[0]);
-        } else {
-            res.status(404).json({ error: 'Car not found' });
+app.use(express.json())
+
+const PORT = 4000;
+
+app.listen(process.env.PORT || PORT, () => {
+    console.log(`Server is listening on port ${PORT}`)
+})
+
+const cars = [{ id: 1, plateNumber: 'ABC 123', bodyType: 'Sedan', Color: 'White', firstName: 'Lovelie', lastName: 'Claravall', }];
+let carsID = cars.length;
+
+// app.get('/cars', async (req, res) => {
+//     if (req.query) {
+//         if (req.query.id) {
+//             // http://localhost:4000/cars?id=1
+//             const task = await sql`SELECT * FROM cars WHERE Id =
+//     ${req.query.id};`;
+//             if (task.rowCount > 0) {
+//                 res.json(task.rows[0]);
+//             } else {
+//                 res.status(404).json();
+//             }
+//             return;
+//         }
+//     }
+//     const cars = await sql`SELECT * FROM cars ORDER BY Id;`;
+//     res.json(cars.rows);
+// });
+
+
+app.get('/Cars', (req, res) => {
+    if (req.query) {
+        if (req.query.id) {
+            // http://localhost:4000/tasks?id=1
+            const car = cars.find((car) => car.id === parseInt(req.query.id));
+            if (car) {
+                res.json(car);
+            } else {
+                res.status(404).json();
+            }
+            return;
         }
-    } catch (err) {
-        res.status(500).json({ error: 'Server Error', details: err.message });
+    }
+    res.json(cars);
+});
+// http://localhost:4000/cars/1
+app.get('/Cars/:id', async (req, res) => {
+    const id = req.params.id;
+    const car = await sql`SELECT * FROM Cars WHERE Id =
+    ${id};`;
+    if (car.rowCount > 0) {
+        res.json(car.rows[0]);
+    } else {
+        res.status(404).json();
     }
 });
 
-// Create a New Car
-app.post('/api/cars', async (req, res) => {
-    const { plate_number, body_type, color, first_name, last_name } = req.body;
-    try {
-        const result = await pool.query(
-            'INSERT INTO cars (plate_number, body_type, color, first_name, last_name) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [plate_number, body_type, color, first_name, last_name]
-        );
-        res.status(201).json(result.rows[0]);  // Return created car
-    } catch (err) {
-        res.status(400).json({ error: 'Bad Request or Duplicate Entry', details: err.message });
+
+// http://localhost:4000/cars - { "name": "New Task" }
+app.post('/Cars', async (req, res) => {
+    await sql`INSERT INTO Cars (Plate, Body, Color, FirstName, LastName) 
+                  VALUES ${req.body.Plate}, ${req.body.Body}, ${req.body.Color}, ${req.body.FirstName}, ${req.body.LastName});`;
+    res.status(201).json();
+});
+
+
+//http://localhost:4000/cars/1 - { "name": "Task 1 Updated", "isDone": true } | { "name": "Task 1 Updated" } | { "isDone":  true }
+app.put('/Cars/:id', async (req, res) => {
+    const id = req.params.id;
+    const taskUpdate = await sql`UPDATE Cars SET Name = ${(req.body.name != undefined ? req.body.name : task.name)
+        }, IsDone = ${(req.body.isDone != undefined ? req.body.isDone :
+            task.isDone)
+        } WHERE Id = ${id};`;
+    if (taskUpdate.rowCount > 0) {
+        const task = await sql`SELECT * FROM Cars WHERE Id =
+    ${id};`;
+        res.status(200).json(task.rows[0]);
+    } else {
+        res.status(404).json();
     }
 });
 
-// Update an Existing Car
-app.put('/api/cars/:id', async (req, res) => {
-    const { id } = req.params;
-    const { plate_number, body_type, color, first_name, last_name } = req.body;
-    try {
-        const result = await pool.query(
-            'UPDATE cars SET plate_number=$1, body_type=$2, color=$3, first_name=$4, last_name=$5 WHERE id=$6 RETURNING *',
-            [plate_number, body_type, color, first_name, last_name, id]
-        );
-        if (result.rows.length > 0) {
-            res.status(200).json(result.rows[0]);  // Return updated car
-        } else {
-            res.status(404).json({ error: 'Car not found' });
-        }
-    } catch (err) {
-        res.status(400).json({ error: 'Bad Request', details: err.message });
+// http://localhost:4000/cars/1
+app.delete('/Cars/:id', async (req, res) => {
+    const id = req.params.id;
+    const task = await sql`DELETE FROM Cars WHERE Id = ${id};`;
+    if (task.rowCount > 0) {
+        res.status(204).json();
+    } else {
+        res.status(404).json();
     }
 });
 
-// Delete a Car
-app.delete('/api/cars/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        const result = await pool.query('DELETE FROM cars WHERE id = $1', [id]);
-        if (result.rowCount > 0) {
-            res.status(204).send();  // No content
-        } else {
-            res.status(404).json({ error: 'Car not found' });
-        }
-    } catch (err) {
-        res.status(500).json({ error: 'Server Error', details: err.message });
-    }
-});
+module.exports = app
 
-// Server setup
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+/*
+Id (1, 2, 3 ...)
+Plate Number (ABC 123, XYZ 1010)
+Body Type (Sub-Compact, Sedan, Crossover, MPV, SUV)
+Color (White, Black, Blue, Red)
+First Name (Juan, Pedro)
+Last Name (Dela Cruz, Penduko)
+
+NSERT INTO Cars (ID, Plate, Body, Color, FirstName, LastName) VALUES ('Task 1', false) */

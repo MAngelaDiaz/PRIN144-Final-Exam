@@ -1,20 +1,10 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "index.js",
-        "use": "@vercel/node"
-      }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "/index.js"
-      }
-    ],
-    "env": {
-    "DATABASE_URL": "postgresql://angela_diaz:diaz1234@your-neon-db-host:5432/car_management_db"
-
-    }
+  "version": 2,
+  "rewrites": [
+  {
+  "source": "/(.*)",
+  "destination": "/api"
+  }
+  ]
   }
   
